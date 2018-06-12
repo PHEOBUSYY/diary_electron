@@ -1,4 +1,5 @@
-const electron = require('electron')
+const electron = require('electron');
+// const Menu = require("menu");
 // Module to control application life.
 const app = electron.app
 // Module to create native browser window.
@@ -31,7 +32,27 @@ function createWindow () {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null
-  })
+  });
+  //解决mac无法粘贴和复制的问题
+    if (process.platform === 'darwin') {
+        // Create our menu entries so that we can use MAC shortcuts
+        electron.Menu.setApplicationMenu(electron.Menu.buildFromTemplate([
+            {
+                label: 'Edit',
+                submenu: [
+                    { role: 'undo' },
+                    { role: 'redo' },
+                    { type: 'separator' },
+                    { role: 'cut' },
+                    { role: 'copy' },
+                    { role: 'paste' },
+                    { role: 'pasteandmatchstyle' },
+                    { role: 'delete' },
+                    { role: 'selectall' }
+                ]
+            }
+        ]));
+    }
 }
 
 // This method will be called when Electron has finished
@@ -55,6 +76,3 @@ app.on('activate', function () {
     createWindow()
   }
 })
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
