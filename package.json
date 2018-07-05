@@ -6,7 +6,6 @@
   "scripts": {
     "start": "electron .",
     "build": "electron-packager . 日记生成器  --platform=mas --arch=all  --out=output/ --overwrite --ignore=node_modules/electron-* --ignore=node_modules/.bin --ignore=.git --ignore=output --prune"
-
   },
   "repository": "",
   "keywords": [
