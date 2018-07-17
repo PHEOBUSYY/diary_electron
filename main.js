@@ -13,20 +13,12 @@ const url = require('url');
 let mainWindow;
 
 
-//mongodb
-
-const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/my_database', (error, db) => {
-    if (error)
-        console.log(error);
-    db.on('error',err=>{
-        console.log("db", err);
-    })
-});
+//dbHelper
+let dbHelper = require('./dbhelper');
 
 function createWindow() {
     // Create the browser window.
-    mainWindow = new BrowserWindow({width: 1024, height: 678});
+    mainWindow = new BrowserWindow({width: 1500, height: 750});
 
     mainWindow.webContents.openDevTools();
     // and load the index.html of the app.
@@ -79,32 +71,23 @@ function createWindow() {
     }
 
     //测试mongodb是否连接成功
-    let dbhelper = new TargetDbHelper();
-    let time = '2018-7-9';
-    let targets = [];
-    targets.push({
-        text: '测试',
-        star: true,
-        editable: false,
-        type: 0,
-        week: ['周六','周日']
-    });
-    targets.push({
-        text: '测试4',
-        star: false,
-        editable: false,
-        type: 0,
-        week: ['周一','周五']
-    });
-    targets.push({
-        text: '测试5',
-        star: false,
-        editable: false,
-        type: 0,
-        week: ['周','周五']
-    });
-    dbhelper.createOrUpdate(time, targets, (res) => {
-    });
+    let args = {
+      method: 'get',
+      time : new Date().toLocaleDateString(),
+      type: 1,
+      data: [
+          {
+              value: '测试0'
+          },
+          {
+              value: '测试1'
+
+          }
+      ]
+    };
+    dbHelper.test(args, res =>{
+        console.log("tester", res);
+    })
 }
 
 // This method will be called when Electron has finished
@@ -128,76 +111,15 @@ app.on('activate', function () {
         createWindow()
     }
 });
-
-electron.ipcMain.on('target', (event, method, time, targets) => {
-    console.log(arguments);
-    let channel = 'targetRenderer';
-    if (method && time) {
-        let dbhelper = new TargetDbHelper();
-        if (method === 'get') {
-            dbhelper.get(time, (res) => {
-                event.sender.send(channel, method, time,res ? res.toJSON() : res);
-            });
-        } else if (method === 'create') {
-            dbhelper.createOrUpdate(time, targets, (res) => {
-                event.sender.send(channel, method, time, res ? res.toJSON() : res);
-            });
-        } else if (method === 'delete') {
-            dbhelper.del(time, (res) => {
-                event.sender.send(channel, method, time,res ?  res.toJSON() : res);
-            });
-        }
-    }
-
+//目标
+let targetKey = 'target';
+electron.ipcMain.on(targetKey, (event, method, time, targets) => {
+    dbHelper.dbTarget(event, method, time, targets);
 });
-let Schema = mongoose.Schema;
-//构造函数
-let targetSchema = new Schema({
-    time: String,
-    targets: [{
-        text: String,
-        star: Boolean,
-        editable: Boolean,
-        type: {type: Number, min: 0, max: 5},
-        week: [String]
-    }]
+//成就
+let inputGroupKey = 'inputGroup';
+electron.ipcMain.on(inputGroupKey, (event, args) => {
+    dbHelper.dbInputGroup(event, args);
 });
 
-let targetModel = mongoose.model('TargetModel', targetSchema);
 
-function TargetDbHelper() {
-    return {
-        get: function (time, callback) {
-            targetModel.findOne({
-                'time': time
-            }, function (err, res) {
-                if (err) console.log("get err", err);
-                console.log("res", res);
-                callback(res);
-            })
-        },
-        createOrUpdate: function (time, targets, callback) {
-            this.del(time,(err)=>{
-                if(err) console.log("del", err);
-                let newObject = new targetModel({
-                    time: time,
-                    targets: targets
-                });
-                console.log("save targets", JSON.stringify(targets));
-                newObject.save().then(res =>{
-                    console.log("save res", res);
-                    callback(res);
-                }).catch(err =>{
-                    if(err) console.log("save", err);
-                })
-            })
-        },
-        del: function (time, callback) {
-            targetModel.deleteOne({'time': time}, function (err, res) {
-                if (err) console.log("del err", err);
-                console.log("res", res);
-                callback(res);
-            })
-        }
-    }
-}
