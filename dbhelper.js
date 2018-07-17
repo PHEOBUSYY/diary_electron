@@ -130,7 +130,62 @@ function InputGroupHelper(args, callback) {
         del(time, type, callback);
     }
 }
+//时间记录
+let timeRecordSchema = new Schema({
+    time: Date,//日期
+    data: [{
+        event: String,//事项
+        start: String,//开始时间
+        end: String,//结束时间
+        remark: String,//备注
+    }]
+});
+//时间记录
+function timeRecordHelper(args, callback) {
+    let timeRecordModel = mongoose.model('TimeRecordModel', timeRecordSchema);
 
+    function get(time, callback) {
+        timeRecordModel.findOne({
+            'time': new Date(time)//日期
+        }, function (err, res) {
+            if (err) console.log("get err", err);
+            callback(res);
+        })
+    }
+
+    function createOrUpdate(time, data, callback) {
+        del(new Date(time), (err) => {
+            if (err) console.log("del", err);
+            let newObject = new timeRecordModel({
+                time: new Date(time),
+                data: data
+            });
+            newObject.save().then(res => {
+                callback(res);
+            }).catch(err => {
+                if (err) console.log("save", err);
+            })
+        })
+    }
+
+    function del(time, callback) {
+        timeRecordModel.deleteOne({'time': new Date(time)}, function (err, res) {
+            if (err) console.log("del err", err);
+            callback(res);
+        })
+    }
+
+    let method = args.method;
+    let time = args.time;
+    if (method === 'get') {
+        get(time, callback);
+    } else if (method === 'create') {
+        let data = args.data;
+        createOrUpdate(time,  data, callback);
+    } else if (method === 'delete') {
+        del(time, callback);
+    }
+}
 
 const dbHelper = {
     dbTarget: function (event, method, time, targets) {
@@ -156,6 +211,18 @@ const dbHelper = {
             }
         };
         InputGroupHelper(args, callback);
+    },
+    timeRecord: function (event, args) {
+        let timeRecordRenderKey = 'timeRecordRenderer';//renderer线程接受的key
+        let callback = res => {
+            //这里这样处理的原因是 只有查询的时候返回的query对象包含toJSON方法，剩下的crud操作返回的普通对象，没有toJSON对象
+            if (res && res.toJSON && typeof res.toJSON === 'function') {
+                event.sender.send(timeRecordRenderKey, args, res.toJSON());
+            } else {
+                event.sender.send(timeRecordRenderKey, args, res);
+            }
+        };
+        timeRecordHelper(args, callback);
     },
     test: function (args, callback) {
         InputGroupHelper(args, callback)

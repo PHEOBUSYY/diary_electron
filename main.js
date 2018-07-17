@@ -122,4 +122,9 @@ electron.ipcMain.on(inputGroupKey, (event, args) => {
     dbHelper.dbInputGroup(event, args);
 });
 
+//时间记录
+let timeRecordKey = 'timeRecord';
+electron.ipcMain.on(timeRecordKey, (event, args) => {
+    dbHelper.timeRecord(event, args);
+});
 
