@@ -17,10 +17,17 @@ let mainWindow;
 let dbHelper = require('./dbhelper');
 
 function createWindow() {
+    console.log("env", process.env.NODE_ENV);
+    console.log("screen", electron.screen.getPrimaryDisplay().workAreaSize);
     // Create the browser window.
-    mainWindow = new BrowserWindow({width: 1500, height: 750});
-
-    mainWindow.webContents.openDevTools();
+    //develop环境下开启debug
+    let screen = electron.screen.getPrimaryDisplay().workAreaSize;
+    if(process.env.NODE_ENV === 'develop'){
+        mainWindow = new BrowserWindow({width: screen.width, height: screen.height});
+        mainWindow.webContents.openDevTools();
+    }else{
+        mainWindow = new BrowserWindow({width: screen.width *2/3, height: screen.height});
+    }
     // and load the index.html of the app.
     mainWindow.loadURL(url.format({
         pathname: path.join(__dirname, 'www/index.html'),
