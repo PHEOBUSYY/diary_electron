@@ -136,14 +136,24 @@ const dbHelper = {
     dbTarget: function (event, method, time, targets) {
         let targetRenderKey = 'targetRenderer';//renderer线程接受的key
         let callback = res => {
-            event.sender.send(targetRenderKey, method, time, res ? res.toJSON() : res);
+            //这里这样处理的原因是 只有查询的时候返回的query对象包含toJSON方法，剩下的crud操作返回的普通对象，没有toJSON对象
+            if (res && res.toJSON && typeof res.toJSON === 'function') {
+                event.sender.send(targetRenderKey, method, time, res.toJSON());
+            } else {
+                event.sender.send(targetRenderKey, method, time, res);
+            }
         };
         TargetDbHelper(method, time, targets, callback);
     },
     dbInputGroup: function (event, args) {
         let inputGroupRenderKey = 'inputGroupRenderer';//renderer线程接受的key
         let callback = res => {
-            event.sender.send(inputGroupRenderKey, args, res ? res.toJSON() : res);
+            //这里这样处理的原因是 只有查询的时候返回的query对象包含toJSON方法，剩下的crud操作返回的普通对象，没有toJSON对象
+            if (res && res.toJSON && typeof res.toJSON === 'function') {
+                event.sender.send(inputGroupRenderKey, args, res.toJSON());
+            } else {
+                event.sender.send(inputGroupRenderKey, args, res);
+            }
         };
         InputGroupHelper(args, callback);
     },
