@@ -18,7 +18,7 @@ let dbHelper = require('./dbhelper');
 
 function createWindow() {
     let screen = electron.screen.getPrimaryDisplay().workAreaSize;
-    // console.log("env", process.env.NODE_ENV);
+    console.log("env", process.env.NODE_ENV);
     // console.log("screen", electron.screen.getPrimaryDisplay().workAreaSize);
     // Create the browser window.
     //develop环境下开启debug
@@ -94,13 +94,19 @@ function testDb() {
         console.log("tester", res);
     })
 }
+
+let scheduleKey = 'schedule';
 function createSchedule() {
-    let job = schedule.scheduleJob('0 10 9,11,17 * * *', function(){
+    schedule.scheduleJob('0 10 9,11,17 * * *', function(){
         let notification = new electron.Notification({
             title: '日记生成器',
             body: '请填写时间记录'
         });
         notification.show();
+    });
+    schedule.scheduleJob('*/30 * * * * *', function(){
+        console.log("schedule", 'auto save');
+        mainWindow.webContents.send(scheduleKey, 'autosave')
     });
     // job.cancel();
 }
@@ -109,7 +115,7 @@ function createSchedule() {
 app.on('ready', function(){
     createWindow();
     createSchedule();
-    testDb();
+    // testDb();
 });
 
 // Quit when all windows are closed.

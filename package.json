@@ -5,7 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "NODE_ENV=develop electron .",
-    "dev": "NODE_ENV=develop cd ../markdown_table_creator && npm run electron && cd ../electron-quick-start && electron .",
+    "dev": "cd ../markdown_table_creator && npm run electron && cd ../electron-quick-start && npm run start",
     "build": "NODE_ENV=product electron-packager . 日记生成器  --platform=mas --arch=all  --out=output/ --overwrite --ignore=node_modules/electron-* --ignore=node_modules/.bin --ignore=.git --ignore=output --prune",
     "deploy": "npm run build && cp -rfp output/日记生成器-mas-x64/日记生成器.app /Applications/ && echo '部署成功...' && open /Applications/日记生成器.app"
   },
