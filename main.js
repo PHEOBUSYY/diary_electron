@@ -12,16 +12,16 @@ const url = require('url');
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
-
+let schedule = require('node-schedule');
 //dbHelper
 let dbHelper = require('./dbhelper');
 
 function createWindow() {
-    console.log("env", process.env.NODE_ENV);
-    console.log("screen", electron.screen.getPrimaryDisplay().workAreaSize);
+    let screen = electron.screen.getPrimaryDisplay().workAreaSize;
+    // console.log("env", process.env.NODE_ENV);
+    // console.log("screen", electron.screen.getPrimaryDisplay().workAreaSize);
     // Create the browser window.
     //develop环境下开启debug
-    let screen = electron.screen.getPrimaryDisplay().workAreaSize;
     if(process.env.NODE_ENV === 'develop'){
         mainWindow = new BrowserWindow({width: screen.width, height: screen.height});
         mainWindow.webContents.openDevTools();
@@ -35,9 +35,6 @@ function createWindow() {
         slashes: true
     }));
 
-    // Open the DevTools.
-    // mainWindow.webContents.openDevTools()
-
     // Emitted when the window is closed.
     mainWindow.on('closed', function () {
         // Dereference the window object, usually you would store windows
@@ -45,7 +42,7 @@ function createWindow() {
         // when you should delete the corresponding element.
         mainWindow = null
     });
-    //解决mac无法粘贴和复制的问题
+    //增加快捷键
     if (process.platform === 'darwin') {
         // Create our menu entries so that we can use MAC shortcuts
         electron.Menu.setApplicationMenu(electron.Menu.buildFromTemplate([{
@@ -76,7 +73,8 @@ function createWindow() {
             }
         ]));
     }
-
+}
+function testDb() {
     //测试mongodb是否连接成功
     let args = {
       method: 'get',
@@ -96,11 +94,23 @@ function createWindow() {
         console.log("tester", res);
     })
 }
+function createSchedule() {
+    let job = schedule.scheduleJob('0 10 9,11,17 * * *', function(){
+        let notification = new electron.Notification({
+            title: '日记生成器',
+            body: '请填写时间记录'
+        });
+        notification.show();
+    });
+    // job.cancel();
+}
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', function(){
+    createWindow();
+    createSchedule();
+    testDb();
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
