@@ -23,10 +23,19 @@ let targetSchema = new Schema({
         editable: Boolean,
         type: {type: Number, min: 0, max: 5},
         week: [String]
-    }]
+    }],
+    summary: {
+        improve: [{
+            value: String
+        }],
+        overall: String,
+        score: ''
+    }
+},{
+    id: false
 });
 
-function TargetDbHelper(method, time, targets, callback) {
+function TargetDbHelper(method, time, targets, summary, callback) {
     let targetModel = mongoose.model('TargetModel', targetSchema);
 
 
@@ -39,12 +48,13 @@ function TargetDbHelper(method, time, targets, callback) {
         })
     }
 
-    function createOrUpdate(time, targets, callback) {
+    function createOrUpdate(time, targets, summary, callback) {
         del(time, (err) => {
             if (err) console.log("del", err);
             let newObject = new targetModel({
                 time: time,
-                targets: targets
+                targets: targets,
+                summary: summary
             });
             newObject.save().then(res => {
                 callback(res);
@@ -65,7 +75,7 @@ function TargetDbHelper(method, time, targets, callback) {
         if (method === 'get') {
             get(time, callback);
         } else if (method === 'create') {
-            createOrUpdate(time, targets, callback);
+            createOrUpdate(time, targets, summary, callback);
         } else if (method === 'delete') {
             del(time, callback);
         }
@@ -93,6 +103,31 @@ function InputGroupHelper(args, callback) {
             if (err) console.log("get err", err);
             callback(res);
         })
+    }
+
+    function query(time, type, callback) {
+        //取time时间的周一和周日日期
+        console.log("enter query ", time);
+        let currentWeek = new Date(time);
+        currentWeek.setDate(currentWeek.getDate() - currentWeek.getDay() + 1);//从周一开始算，所以要加1
+        console.log("week", currentWeek.toLocaleDateString());
+        let weekEnd = new Date(currentWeek.toLocaleDateString());
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        console.log("week2", weekEnd.toLocaleDateString());
+        let typeArray = [];
+        if (type instanceof Array) {
+            type.forEach(item => {
+                typeArray.push({type: item});
+            });
+        } else {
+            typeArray.push({type: type});
+        }
+        console.log("type", typeArray);
+        inputGroupModel.find().or(typeArray).where('time').gte(currentWeek).lte(weekEnd).lean().exec(function (err, res) {
+            if (err) console.log("err", err);
+            console.log("res", res);
+            callback(res);
+        });
     }
 
     function createOrUpdate(time, type, data, callback) {
@@ -128,8 +163,11 @@ function InputGroupHelper(args, callback) {
         createOrUpdate(time, type, data, callback);
     } else if (method === 'delete') {
         del(time, type, callback);
+    } else if (method === 'query') {
+        query(time, type, callback);
     }
 }
+
 //时间记录
 let timeRecordSchema = new Schema({
     time: Date,//日期
@@ -140,6 +178,7 @@ let timeRecordSchema = new Schema({
         remark: String,//备注
     }]
 });
+
 //时间记录
 function timeRecordHelper(args, callback) {
     let timeRecordModel = mongoose.model('TimeRecordModel', timeRecordSchema);
@@ -181,14 +220,14 @@ function timeRecordHelper(args, callback) {
         get(time, callback);
     } else if (method === 'create') {
         let data = args.data;
-        createOrUpdate(time,  data, callback);
+        createOrUpdate(time, data, callback);
     } else if (method === 'delete') {
         del(time, callback);
     }
 }
 
 const dbHelper = {
-    dbTarget: function (event, method, time, targets) {
+    dbTarget: function (event, method, time, targets, summary) {
         let targetRenderKey = 'targetRenderer';//renderer线程接受的key
         let callback = res => {
             //这里这样处理的原因是 只有查询的时候返回的query对象包含toJSON方法，剩下的crud操作返回的普通对象，没有toJSON对象
@@ -198,7 +237,7 @@ const dbHelper = {
                 event.sender.send(targetRenderKey, method, time, res);
             }
         };
-        TargetDbHelper(method, time, targets, callback);
+        TargetDbHelper(method, time, targets, summary, callback);
     },
     dbInputGroup: function (event, args) {
         let inputGroupRenderKey = 'inputGroupRenderer';//renderer线程接受的key

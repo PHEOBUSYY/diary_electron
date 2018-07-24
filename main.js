@@ -22,11 +22,11 @@ function createWindow() {
     // console.log("screen", electron.screen.getPrimaryDisplay().workAreaSize);
     // Create the browser window.
     //develop环境下开启debug
-    if(process.env.NODE_ENV === 'develop'){
+    if (process.env.NODE_ENV === 'develop') {
         mainWindow = new BrowserWindow({width: screen.width, height: screen.height});
         mainWindow.webContents.openDevTools();
-    }else{
-        mainWindow = new BrowserWindow({width: screen.width *2/3, height: screen.height});
+    } else {
+        mainWindow = new BrowserWindow({width: screen.width * 2 / 3, height: screen.height});
     }
     // and load the index.html of the app.
     mainWindow.loadURL(url.format({
@@ -74,37 +74,30 @@ function createWindow() {
         ]));
     }
 }
+
 function testDb() {
     //测试mongodb是否连接成功
     let args = {
-      method: 'get',
-      time : new Date().toLocaleDateString(),
-      type: 1,
-      data: [
-          {
-              value: '测试0'
-          },
-          {
-              value: '测试1'
-
-          }
-      ]
+        method: 'query',
+        time: '2018-7-19',
+        type: 1,
     };
-    dbHelper.test(args, res =>{
+    dbHelper.test(args, res => {
         console.log("tester", res);
     })
 }
 
 let scheduleKey = 'schedule';
+
 function createSchedule() {
-    schedule.scheduleJob('0 10 9,11,17 * * *', function(){
+    schedule.scheduleJob('0 10 9,11,17 * * *', function () {
         let notification = new electron.Notification({
             title: '日记生成器',
             body: '请填写时间记录'
         });
         notification.show();
     });
-    schedule.scheduleJob('*/30 * * * * *', function(){
+    schedule.scheduleJob('*/30 * * * * *', function () {
         console.log("schedule", 'auto save');
         mainWindow.webContents.send(scheduleKey, 'autosave')
     });
@@ -112,7 +105,7 @@ function createSchedule() {
 }
 
 // Some APIs can only be used after this event occurs.
-app.on('ready', function(){
+app.on('ready', function () {
     createWindow();
     createSchedule();
     // testDb();
@@ -136,8 +129,8 @@ app.on('activate', function () {
 });
 //目标
 let targetKey = 'target';
-electron.ipcMain.on(targetKey, (event, method, time, targets) => {
-    dbHelper.dbTarget(event, method, time, targets);
+electron.ipcMain.on(targetKey, (event, method, time, targets, summary) => {
+    dbHelper.dbTarget(event, method, time, targets, summary);
 });
 //成就
 let inputGroupKey = 'inputGroup';
