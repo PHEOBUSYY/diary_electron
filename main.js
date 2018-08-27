@@ -8,6 +8,8 @@ const BrowserWindow = electron.BrowserWindow;
 const path = require('path');
 const url = require('url');
 
+
+const globalShortcut = electron.globalShortcut;
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
@@ -43,6 +45,7 @@ function createWindow() {
         mainWindow = null
     });
     //增加快捷键
+    let systemKey = 'systemRenderer';
     if (process.platform === 'darwin') {
         // Create our menu entries so that we can use MAC shortcuts
         electron.Menu.setApplicationMenu(electron.Menu.buildFromTemplate([{
@@ -58,7 +61,7 @@ function createWindow() {
             ]
         },
             {
-                label: 'Edit',
+                label: '编辑',
                 submenu: [
                     {role: 'undo'},
                     {role: 'redo'},
@@ -70,8 +73,26 @@ function createWindow() {
                     {role: 'delete'},
                     {role: 'selectall'}
                 ]
+            },
+            {
+                label: '切换',
+                submenu: [
+                    {label: "向前", accelerator: "CommandOrControl+Right", click: function () {
+                            mainWindow.webContents.send(systemKey, {
+                                action: 'next',
+                                data: ''
+                            })
+                        }},
+                    {label: "后退", accelerator: "CommandOrControl+Left", click: function () {
+                            mainWindow.webContents.send(systemKey, {
+                                action: 'pre',
+                                data: ''
+                            })
+                        }},
+                ]
             }
         ]));
+
     }
 }
 
@@ -92,7 +113,7 @@ let scheduleKey = 'schedule';
 function createSchedule() {
     schedule.scheduleJob('0 10 9,11,17 * * *', function () {
         let notification = new electron.Notification({
-            title: '日记生成器',
+            title: '心言',
             body: '请填写时间记录'
         });
         notification.show();
@@ -104,9 +125,27 @@ function createSchedule() {
     // job.cancel();
 }
 
+
+function registerShortCut() {
+
+    // globalShortcut.register('CommandOrControl+Left', () => {
+    //     mainWindow.webContents.send(systemKey, {
+    //         action: 'preMonth',
+    //         data: ''
+    //     })
+    // });
+    // globalShortcut.register('CommandOrControl+Right', () => {
+    //     mainWindow.webContents.send(systemKey, {
+    //         action: 'nextMonth',
+    //         data: ''
+    //     })
+    // });
+}
+
 // Some APIs can only be used after this event occurs.
 app.on('ready', function () {
     createWindow();
+    registerShortCut();
     createSchedule();
     // testDb();
 });
@@ -129,11 +168,11 @@ app.on('activate', function () {
 });
 //目标
 let targetKey = 'target';
-electron.ipcMain.on(targetKey, (event, method, time, targets, summary) => {
-    dbHelper.dbTarget(event, method, time, targets, summary);
+electron.ipcMain.on(targetKey, (event, args) => {
+    dbHelper.dbTarget(event, args);
 });
 //成就
-let inputGroupKey = 'inputGroup';
+let inputGroupKey = 'inputgroup';
 electron.ipcMain.on(inputGroupKey, (event, args) => {
     dbHelper.dbInputGroup(event, args);
 });
@@ -143,4 +182,5 @@ let timeRecordKey = 'timeRecord';
 electron.ipcMain.on(timeRecordKey, (event, args) => {
     dbHelper.timeRecord(event, args);
 });
+
 

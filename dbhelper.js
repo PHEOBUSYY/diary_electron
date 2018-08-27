@@ -31,11 +31,11 @@ let targetSchema = new Schema({
         overall: String,
         score: ''
     }
-},{
+}, {
     id: false
 });
 
-function TargetDbHelper(method, time, targets, summary, callback) {
+function TargetDbHelper(args, callback) {
     let targetModel = mongoose.model('TargetModel', targetSchema);
 
 
@@ -70,11 +70,14 @@ function TargetDbHelper(method, time, targets, summary, callback) {
             callback(res);
         })
     }
-
+    let method = args.method;
+    let time = args.time;
     if (method && time) {
         if (method === 'get') {
             get(time, callback);
         } else if (method === 'create') {
+            let targets = args.targets;
+            let summary = args.summary;
             createOrUpdate(time, targets, summary, callback);
         } else if (method === 'delete') {
             del(time, callback);
@@ -96,11 +99,13 @@ function InputGroupHelper(args, callback) {
     let inputGroupModel = mongoose.model('InputGroupModel', inputGroupSchema);
 
     function get(time, type, callback) {
+        console.log("get input", time, type);
         inputGroupModel.findOne({
             'time': new Date(time),//日期
             'type': type,//类型
         }, function (err, res) {
             if (err) console.log("get err", err);
+            console.log("get input res", res);
             callback(res);
         })
     }
@@ -153,6 +158,7 @@ function InputGroupHelper(args, callback) {
         })
     }
 
+    console.log("input args", args);
     let method = args.method;
     let time = args.time;
     let type = args.type;
@@ -227,20 +233,20 @@ function timeRecordHelper(args, callback) {
 }
 
 const dbHelper = {
-    dbTarget: function (event, method, time, targets, summary) {
+    dbTarget: function (event, args) {
         let targetRenderKey = 'targetRenderer';//renderer线程接受的key
         let callback = res => {
             //这里这样处理的原因是 只有查询的时候返回的query对象包含toJSON方法，剩下的crud操作返回的普通对象，没有toJSON对象
             if (res && res.toJSON && typeof res.toJSON === 'function') {
-                event.sender.send(targetRenderKey, method, time, res.toJSON());
+                event.sender.send(targetRenderKey, args, res.toJSON());
             } else {
-                event.sender.send(targetRenderKey, method, time, res);
+                event.sender.send(targetRenderKey, args, res);
             }
         };
-        TargetDbHelper(method, time, targets, summary, callback);
+        TargetDbHelper(args, callback);
     },
     dbInputGroup: function (event, args) {
-        let inputGroupRenderKey = 'inputGroupRenderer';//renderer线程接受的key
+        let inputGroupRenderKey = 'inputgroupRenderer';//renderer线程接受的key
         let callback = res => {
             //这里这样处理的原因是 只有查询的时候返回的query对象包含toJSON方法，剩下的crud操作返回的普通对象，没有toJSON对象
             if (res && res.toJSON && typeof res.toJSON === 'function') {
