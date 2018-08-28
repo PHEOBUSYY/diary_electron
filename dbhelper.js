@@ -99,26 +99,21 @@ function InputGroupHelper(args, callback) {
     let inputGroupModel = mongoose.model('InputGroupModel', inputGroupSchema);
 
     function get(time, type, callback) {
-        console.log("get input", time, type);
         inputGroupModel.findOne({
             'time': new Date(time),//日期
             'type': type,//类型
         }, function (err, res) {
             if (err) console.log("get err", err);
-            console.log("get input res", res);
             callback(res);
         })
     }
 
     function query(time, type, callback) {
         //取time时间的周一和周日日期
-        console.log("enter query ", time);
         let currentWeek = new Date(time);
         currentWeek.setDate(currentWeek.getDate() - currentWeek.getDay() + 1);//从周一开始算，所以要加1
-        console.log("week", currentWeek.toLocaleDateString());
         let weekEnd = new Date(currentWeek.toLocaleDateString());
         weekEnd.setDate(weekEnd.getDate() + 6);
-        console.log("week2", weekEnd.toLocaleDateString());
         let typeArray = [];
         if (type instanceof Array) {
             type.forEach(item => {
@@ -127,10 +122,8 @@ function InputGroupHelper(args, callback) {
         } else {
             typeArray.push({type: type});
         }
-        console.log("type", typeArray);
         inputGroupModel.find().or(typeArray).where('time').gte(currentWeek).lte(weekEnd).lean().exec(function (err, res) {
             if (err) console.log("err", err);
-            console.log("res", res);
             callback(res);
         });
     }
@@ -158,7 +151,6 @@ function InputGroupHelper(args, callback) {
         })
     }
 
-    console.log("input args", args);
     let method = args.method;
     let time = args.time;
     let type = args.type;
