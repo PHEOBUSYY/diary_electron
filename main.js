@@ -9,7 +9,6 @@ const path = require('path');
 const url = require('url');
 
 
-const globalShortcut = electron.globalShortcut;
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
@@ -20,8 +19,7 @@ let dbHelper = require('./dbhelper');
 
 function createWindow() {
     let screen = electron.screen.getPrimaryDisplay().workAreaSize;
-    console.log("env", process.env.NODE_ENV);
-    // console.log("screen", electron.screen.getPrimaryDisplay().workAreaSize);
+    // console.log("env", process.env.NODE_ENV);
     // Create the browser window.
     //develop环境下开启debug
     if (process.env.NODE_ENV === 'develop') {
@@ -55,7 +53,7 @@ function createWindow() {
                 {type: "separator"},
                 {
                     label: "Quit", accelerator: "Command+Q", click: function () {
-                        app.quit();
+                        sendIpc('quit');
                     }
                 }
             ]
@@ -77,18 +75,22 @@ function createWindow() {
             {
                 label: '切换',
                 submenu: [
-                    {label: "向前", accelerator: "CommandOrControl+Right", click: function () {
+                    {
+                        label: "向前", accelerator: "CommandOrControl+Right", click: function () {
                             mainWindow.webContents.send(systemKey, {
                                 action: 'next',
                                 data: ''
                             })
-                        }},
-                    {label: "后退", accelerator: "CommandOrControl+Left", click: function () {
+                        }
+                    },
+                    {
+                        label: "后退", accelerator: "CommandOrControl+Left", click: function () {
                             mainWindow.webContents.send(systemKey, {
                                 action: 'pre',
                                 data: ''
                             })
-                        }},
+                        }
+                    },
                 ]
             }
         ]));
@@ -96,22 +98,31 @@ function createWindow() {
     }
 }
 
-function testDb() {
+function createConnectDB() {
     //测试mongodb是否连接成功
-    let args = {
-        method: 'query',
-        time: '2018-7-19',
-        type: 1,
-    };
-    dbHelper.test(args, res => {
-        console.log("tester", res);
-    })
+    dbHelper.createConnectDB(error => {
+        if (error) {
+            let notification = new electron.Notification({
+                title: '心言-提示',
+                body: '请开启后台数据服务!'
+            });
+            notification.show();
+        }
+    });
 }
 
-let scheduleKey = 'schedule';
+let scheduleKey = 'systemRenderer';
 
 function createSchedule() {
-    schedule.scheduleJob('0 10 9,11,17 * * *', function () {
+    //每隔半小时提示一次
+    schedule.scheduleJob('0 20 9,13,16 * * *', function () {
+        let notification = new electron.Notification({
+            title: '心言-提示',
+            body: '请查看今日任务'
+        });
+        notification.show();
+    });
+    schedule.scheduleJob('0 */30 * * * *', function () {
         let notification = new electron.Notification({
             title: '心言',
             body: '请填写时间记录'
@@ -119,35 +130,26 @@ function createSchedule() {
         notification.show();
     });
     schedule.scheduleJob('*/30 * * * * *', function () {
-        console.log("schedule", 'auto save');
-        mainWindow.webContents.send(scheduleKey, 'autosave')
+        sendIpc('autosave');
     });
     // job.cancel();
 }
 
+function sendIpc(action) {
+    mainWindow.webContents.send(scheduleKey, {action: action})
+}
 
 function registerShortCut() {
 
-    // globalShortcut.register('CommandOrControl+Left', () => {
-    //     mainWindow.webContents.send(systemKey, {
-    //         action: 'preMonth',
-    //         data: ''
-    //     })
-    // });
-    // globalShortcut.register('CommandOrControl+Right', () => {
-    //     mainWindow.webContents.send(systemKey, {
-    //         action: 'nextMonth',
-    //         data: ''
-    //     })
-    // });
 }
 
 // Some APIs can only be used after this event occurs.
 app.on('ready', function () {
     createWindow();
     registerShortCut();
+    //开启数据库连接
+    createConnectDB();
     createSchedule();
-    // testDb();
 });
 
 // Quit when all windows are closed.
@@ -181,6 +183,16 @@ electron.ipcMain.on(inputGroupKey, (event, args) => {
 let timeRecordKey = 'timeRecord';
 electron.ipcMain.on(timeRecordKey, (event, args) => {
     dbHelper.timeRecord(event, args);
+});
+let systemKey = 'system';
+electron.ipcMain.on(systemKey, (event, args) => {
+    //系统类通讯
+    if (args.action === 'quit') {
+        //退出
+        setTimeout(()=>{
+            app.quit();
+        },500)
+    }
 });
 
 

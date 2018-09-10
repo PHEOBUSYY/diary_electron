@@ -4,15 +4,12 @@
  */
 //mongodb
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/my_database', {
-    // useNewUrlParser: true
-}, (error, db) => {
-    if (error) console.log(error);
-    db.on('error', err => {
-        console.log("db", err);
-    })
-});
-
+let uri = 'mongodb://localhost:27017/my_database';
+// mongoose.connect(uri,{ useNewUrlParser: true }, function(error) {
+//     if(error){
+//         console.log("mongoose connect error",  error);
+//     }
+// });
 let Schema = mongoose.Schema;
 //目标对象
 let targetSchema = new Schema({
@@ -261,8 +258,13 @@ const dbHelper = {
         };
         timeRecordHelper(args, callback);
     },
-    test: function (args, callback) {
-        InputGroupHelper(args, callback)
+    createConnectDB: function (callback) {
+        mongoose.connect(uri,{ useNewUrlParser: true }, function(error) {
+            if(callback)callback(error);
+            if(error){
+                console.log("mongoose connect error",  error);
+            }
+        });
     }
 
 };
