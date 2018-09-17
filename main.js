@@ -85,6 +85,16 @@ function createWindow() {
                             sendIpc('pre');
                         }
                     },
+                    {
+                        label: "日记", accelerator: "CommandOrControl+Alt+Left", click: function () {
+                            sendIpc('pre_router');
+                        }
+                    },
+                    {
+                        label: "目标", accelerator: "CommandOrControl+Alt+Right", click: function () {
+                            sendIpc('next_router');
+                        }
+                    },
                 ]
             },
             {
