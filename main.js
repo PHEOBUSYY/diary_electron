@@ -77,18 +77,23 @@ function createWindow() {
                 submenu: [
                     {
                         label: "向前", accelerator: "CommandOrControl+Right", click: function () {
-                            mainWindow.webContents.send(systemKey, {
-                                action: 'next',
-                                data: ''
-                            })
+                            sendIpc('next');
                         }
                     },
                     {
                         label: "后退", accelerator: "CommandOrControl+Left", click: function () {
-                            mainWindow.webContents.send(systemKey, {
-                                action: 'pre',
-                                data: ''
-                            })
+                            sendIpc('pre');
+                        }
+                    },
+                ]
+            },
+            {
+                label: '操作',
+                submenu: [
+                    {
+                        //electron中 回车对应为：Return
+                        label: "保存", accelerator: "CommandOrControl+Return", click: function () {
+                            sendIpc('autosave');
                         }
                     },
                 ]
@@ -135,8 +140,8 @@ function createSchedule() {
     // job.cancel();
 }
 
-function sendIpc(action) {
-    mainWindow.webContents.send(scheduleKey, {action: action})
+function sendIpc(action,data) {
+    mainWindow.webContents.send(scheduleKey, {action: action,data: data})
 }
 
 function registerShortCut() {
