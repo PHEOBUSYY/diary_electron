@@ -42,6 +42,18 @@ function createWindow() {
         // when you should delete the corresponding element.
         mainWindow = null
     });
+    mainWindow.on('show', function () {
+        console.log("mainWin show");
+        sendIpc('onShow');
+    });
+    mainWindow.on('focus',function () {
+        console.log("mainWin focus");
+        sendIpc('onFocus');
+    });
+    mainWindow.on('blur',function () {
+        console.log("mainWin blur");
+        sendIpc('onBlur');
+    });
     //增加快捷键
     let systemKey = 'systemRenderer';
     if (process.platform === 'darwin') {
