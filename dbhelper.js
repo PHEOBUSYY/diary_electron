@@ -46,8 +46,7 @@ function TargetDbHelper(args, callback) {
     }
 
     function createOrUpdate(time, targets, summary, callback) {
-        del(time, (err) => {
-            if (err) console.log("del", err);
+        del(time, () => {
             let newObject = new targetModel({
                 time: time,
                 targets: targets,
@@ -62,7 +61,7 @@ function TargetDbHelper(args, callback) {
     }
 
     function del(time, callback) {
-        targetModel.deleteOne({'time': time}, function (err, res) {
+        targetModel.deleteMany({'time': time}, function (err, res) {
             if (err) console.log("del err", err);
             callback(res);
         })
@@ -126,8 +125,7 @@ function InputGroupHelper(args, callback) {
     }
 
     function createOrUpdate(time, type, data, callback) {
-        del(new Date(time), type, (err) => {
-            if (err) console.log("del", err);
+        del(new Date(time), type, () => {
             let newObject = new inputGroupModel({
                 time: new Date(time),
                 type: type,
@@ -142,7 +140,7 @@ function InputGroupHelper(args, callback) {
     }
 
     function del(time, type, callback) {
-        inputGroupModel.deleteOne({'time': new Date(time), 'type': type}, function (err, res) {
+        inputGroupModel.deleteMany({'time': new Date(time), 'type': type}, function (err, res) {
             if (err) console.log("del err", err);
             callback(res);
         })
@@ -188,8 +186,7 @@ function timeRecordHelper(args, callback) {
     }
 
     function createOrUpdate(time, data, callback) {
-        del(new Date(time), (err) => {
-            if (err) console.log("del", err);
+        del(new Date(time), () => {
             let newObject = new timeRecordModel({
                 time: new Date(time),
                 data: data
@@ -203,7 +200,7 @@ function timeRecordHelper(args, callback) {
     }
 
     function del(time, callback) {
-        timeRecordModel.deleteOne({'time': new Date(time)}, function (err, res) {
+        timeRecordModel.deleteMany({'time': new Date(time)}, function (err, res) {
             if (err) console.log("del err", err);
             callback(res);
         })
