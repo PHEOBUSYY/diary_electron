@@ -52,7 +52,6 @@ function createWindow() {
         sendIpc('onBlur');
     });
     //增加快捷键
-    let systemKey = 'systemRenderer';
     if (process.platform === 'darwin') {
         // Create our menu entries so that we can use MAC shortcuts
         electron.Menu.setApplicationMenu(electron.Menu.buildFromTemplate([{
@@ -195,21 +194,25 @@ app.on('activate', function () {
 //目标
 let targetKey = 'target';
 electron.ipcMain.on(targetKey, (event, args) => {
+    console.log("target", args);
     dbHelper.dbTarget(event, args);
 });
 //成就
 let inputGroupKey = 'inputgroup';
 electron.ipcMain.on(inputGroupKey, (event, args) => {
+    console.log("inputgroup", args);
     dbHelper.dbInputGroup(event, args);
 });
 
 //时间记录
 let timeRecordKey = 'timeRecord';
 electron.ipcMain.on(timeRecordKey, (event, args) => {
+    console.log("timeRecord", args);
     dbHelper.timeRecord(event, args);
 });
 let systemKey = 'system';
 electron.ipcMain.on(systemKey, (event, args) => {
+    console.log("system", args);
     //系统类通讯
     if (args.action === 'quit') {
         //退出
